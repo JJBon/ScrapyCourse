@@ -9,22 +9,36 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 
 import os
+import csv
 import glob
+from openpyxl import Workbook
 
 from time import sleep
 
 def product_info(response,value):
     return response.xpath('//th[text()="'+value+'"]/following-sibling::td/text()').extract_first()
 
-# class BooksSpider(CrawlSpider):
-#     name = 'books'
-#     allowed_domains = ['books.toscrape.com']
-#     start_urls = ['http://books.toscrape.com/']
+class SimpleSpider(CrawlSpider):
+    name = 'books_simple'
+    allowed_domains = ['books.toscrape.com']
+    start_urls = ['http://books.toscrape.com/']
 
-#     rules = (Rule(LinkExtractor(deny_domains=('google.com')),callback='parse_page',follow=False),)
+    rules = (Rule(LinkExtractor(deny_domains=('google.com')),callback='parse_page',follow=False),)
 
-#     def parse_page(self, response):
-#         yield {'URL': response.url}
+    def parse_page(self, response):
+        yield {'URL': response.url}
+    
+    def close(self,reason):
+        csv_file = max(glob.iglob('*csv'),key=os.path.getctime)
+
+        wb = Workbook()
+        ws = wb.active
+
+        with open(csv_file,'r') as f:
+            for row in csv.reader(f):
+                ws.append(row)
+        wb.save(csv_file.replace('.csv','') + 'xlsx')
+
 
 # class BooksSpider(Spider):
 #     name = 'books'
